@@ -3,8 +3,8 @@ Contributors: lopo
 Donate link: http://lopo.it/duplicate-post-plugin/
 Tags: duplicate post, copy, clone
 Requires at least: 3.0
-Tested up to: 3.3.1
-Stable tag: 2.2
+Tested up to: 3.3.2
+Stable tag: 2.4.1
 
 Clone posts and pages.
 
@@ -29,28 +29,28 @@ There is also a **template tag**, so you can put it in your templates and clone 
 In the Options page under Settings it is now possible to choose what to copy:
 
 * the original post/page date
-* the original post/page status (draft, published, pending), when cloning from the posts list.
+* the original post/page status (draft, published, pending), when cloning from the posts list
 * the original post/page excerpt
+* the original post/page attachments (actual files won't be copied)
+* all the children of the original page
 * which taxonomies and custom fields
 
 You can also set a prefix (or a suffix) to place before (or after) the title of the cloned post/page, and the roles allowed to clone posts or pages.
 
-If you want to contribute to translate the plugin in languages other than English, there is a [Launchpad translation project](https://translations.launchpad.net/duplicate-post/) available (you can also send me an e-mail using the form on my website).
+If you want to contribute to translate the plugin in languages other than English, there is a [GlotPress translation project](http://lopo.it/glotpress/projects/duplicate-post) available (no registration required! — You can also send me an e-mail using [the form on my website](http://lopo.it/contatti/)).
 
 **If you're a plugin developer**, I suggest to read the section made just for you under "Other Notes", to ensure compatibility between your plugin(s) and mine.
 
 Thanks for all the suggestions, bug reports, translations and donations, they're frankly too many to be listed here!
 
-An example of use: I started this for a small movie theater website which I was building. Every Friday there's a new movie showing with a new timetable, and thus a new post: but sometimes a movie stays for more than a week, so I need to copy the last post and change only the dates, leaving movie title, director's and actors' names etc. unchanged.
-The website is http://www.kino-desse.org and the cinema is located in Livorno, Italy.
-
 == Installation ==
 
 Use WordPress' Add New Plugin feature, searching "Duplicate Post", or download the archive and:
 
-1. Upload `duplicate-post` directory to the `/wp-content/plugins/` directory
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Go to Options -> Duplicate Post and customize behaviour as needed
+1. Unzip the archive on your computer  
+2. Upload `duplicate-post` directory to the `/wp-content/plugins/` directory
+3. Activate the plugin through the 'Plugins' menu in WordPress
+4. Go to Settings -> Duplicate Post and customize behaviour as needed
 
 == Frequently Asked Questions ==
 
@@ -60,9 +60,9 @@ First, check your version of WordPress: the plugin is not supposed to work on ol
 
 Then try to deactivate and re-activate it, some user have reported that this fixes the problem.
 
-Pay attention also to the new "Roles allowed to copy" option: it should convert the former "user level" option to the new standard, but unknown problems may arise. Make sure that your role is enabled.
+Pay also attention to the new "Roles allowed to copy" option: it should convert the former "user level" option to the new standard, but unknown problems may arise. Make sure that your role is enabled.
 
-If not, maybe there is some kind of conflict with other plugins: feel free to write me and we'll try to discover a solution (it will be *really* helpful if you try to deactivate all your other plugins one by one to see which one conflicts with mine... But do it only if you know what you're doing, I will not be responsible of any problem you may experience).
+If not, maybe there is some kind of conflict with other plugins: feel free [to write me](http://lopo.it/contatti/) and we'll try to discover a solution (it will be *really* helpful if you try to deactivate all your other plugins one by one to see which one conflicts with mine... But do it only if you know what you're doing, I will not be responsible of any problem you may experience).
 
 = Can you add it to the bulk actions in the post/page list? =
 
@@ -79,6 +79,15 @@ There is an open ticket in WordPress Trac, as other plugin developers too are in
 5. The admin bar link. 
 
 == Upgrade Notice ==
+
+= 2.4.1 =
+Fixes a couple of bug. Recommended if you have problems with v2.4
+
+= 2.4 =
+Copy child pages + a couple of bugfixes + licence switch to GPLv2
+
+= 2.3 =
+Fixes a bunch of bugs + copy attachments + choose where to show the links.
 
 = 2.2 =
 VERY IMPORTANT UPGRADE to get rid of problems with complex custom fields, afflicting both 2.1.* releases.
@@ -105,6 +114,24 @@ Some users have experienced a fatal error when upgrading to v1.1: this may fix i
 New features and customization, WP 3.0 compatibility: you should upgrade if you want to copy Custom Posts with Custom Taxonomies.
 
 == Changelog ==
+
+= 2.4.1 =
+* Fixed regression about draft permalinks
+* Fixed bug with guid
+* Don't clone to_ping and pinged (maybe there will be an option about those later)
+
+= 2.4 =
+* New option to clone the children of the original page
+* Licence changed to GPLv2 or later
+* Fixed publishing dates for drafts 
+* Fixed bug with prefix/suffix
+* Translation project moved to GlotPress
+
+= 2.3 =
+* Added options to choose where to show the "Clone" links
+* Clone attachments (i.e. references in the DB, not physical files) 
+* Fix for untranslated user roles
+* Some other fixes (missing checks, PHP warnings and errors, etc.)
 
 = 2.2 =
 * Fix for problems when copying serialized meta fields
@@ -222,6 +249,6 @@ Please refer to the [Plugin API](http://codex.wordpress.org/Plugin_API) for ever
 If you find this useful and you if you want to contribute, there are three ways:
 
    1. You can [write me](http://lopo.it/contatti/) and submit your bug reports, suggestions and requests for features;
-   2. If you want to translate it to your language (there are just a few lines of text), you can use the [Launchpad translation project](https://translations.launchpad.net/duplicate-post/), or [contact me](http://lopo.it/contatti/) and I’ll send you the .pot catalogue; your translation could be featured in next releases;
+   2. If you want to translate it to your language (there are just a few lines of text), you can use the [GlotPress translation project](http://lopo.it/glotpress/projects/duplicate-post), or [contact me](http://lopo.it/contatti/) and I’ll send you the .pot catalogue; your translation could be featured in next releases;
    3. Using the plugin is free, but if you want you can send me some money with PayPal [here](http://lopo.it/duplicate-post-plugin/)
 

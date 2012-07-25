@@ -28,24 +28,29 @@ function duplicate_post_plugin_upgrade() {
 	$installed_version = duplicate_post_get_installed_version();
 
 	if (empty($installed_version)) { // first install
-		
+
 		// Add capability to admin and editors
-		
+
 		// Get default roles
 		$default_roles = array(
-			3 => 'editor',
-			8 => 'administrator',
+		3 => 'editor',
+		8 => 'administrator',
 		);
-		
+
 		// Cycle all roles and assign capability if its level >= duplicate_post_copy_user_level
 		foreach ($default_roles as $level => $name){
 			$role = get_role($name);
-			$role->add_cap( 'copy_posts' );
+			if(!empty($role)) $role->add_cap( 'copy_posts' );
 		}
 			
 		add_option('duplicate_post_copyexcerpt','1');
+		add_option('duplicate_post_copyattachments','0');
+		add_option('duplicate_post_copychildren','0');
 		add_option('duplicate_post_copystatus','0');
 		add_option('duplicate_post_taxonomies_blacklist',array());
+		add_option('duplicate_post_show_row','1');
+		add_option('duplicate_post_show_adminbar','1');
+		add_option('duplicate_post_show_submitbox','1');
 	} else if ( $installed_version==duplicate_post_get_current_version() ) { //re-install
 		// do nothing
 	} else { //upgrade form previous version
@@ -54,11 +59,11 @@ function duplicate_post_plugin_upgrade() {
 		delete_option('duplicate_post_create_user_level');
 		delete_option('duplicate_post_view_user_level');
 		delete_option('dp_notice');
-	
+
 		/*
 		 * Convert old userlevel option to new capability scheme
 		 */
-		
+
 		// Get old duplicate_post_copy_user_level option
 		$min_user_level = get_option('duplicate_post_copy_user_level');
 
@@ -70,7 +75,7 @@ function duplicate_post_plugin_upgrade() {
 			3 => 'editor',
 			8 => 'administrator',
 			);
-				
+
 			// Cycle all roles and assign capability if its level >= duplicate_post_copy_user_level
 			foreach ($default_roles as $level => $name){
 				$role = get_role($name);
@@ -81,18 +86,25 @@ function duplicate_post_plugin_upgrade() {
 			// delete old option
 			delete_option('duplicate_post_copy_user_level');
 		}
-		
+
 		add_option('duplicate_post_copyexcerpt','1');
+		add_option('duplicate_post_copyattachments','0');
+		add_option('duplicate_post_copychildren','0');
 		add_option('duplicate_post_copystatus','0');
 		add_option('duplicate_post_taxonomies_blacklist',array());
+		add_option('duplicate_post_show_row','1');
+		add_option('duplicate_post_show_adminbar','1');
+		add_option('duplicate_post_show_submitbox','1');
 	}
 	// Update version number
 	update_option( 'duplicate_post_version', duplicate_post_get_current_version() );
 
 }
 
-add_filter('post_row_actions', 'duplicate_post_make_duplicate_link_row',10,2);
-add_filter('page_row_actions', 'duplicate_post_make_duplicate_link_row',10,2);
+if (get_option('duplicate_post_show_row') == 1){
+	add_filter('post_row_actions', 'duplicate_post_make_duplicate_link_row',10,2);
+	add_filter('page_row_actions', 'duplicate_post_make_duplicate_link_row',10,2);
+}
 
 /**
  * Add the link to action list for post_row_actions
@@ -112,7 +124,9 @@ function duplicate_post_make_duplicate_link_row($actions, $post) {
 /**
  * Add a button in the post/page edit screen to create a clone
  */
-add_action( 'post_submitbox_start', 'duplicate_post_add_duplicate_post_button' );
+if (get_option('duplicate_post_show_submitbox') == 1){
+	add_action( 'post_submitbox_start', 'duplicate_post_add_duplicate_post_button' );
+}
 
 function duplicate_post_add_duplicate_post_button() {
 	if ( isset( $_GET['post'] ) && duplicate_post_is_current_user_allowed_to_copy()) {
@@ -222,6 +236,7 @@ add_action('dp_duplicate_page', 'duplicate_post_copy_post_taxonomies', 10, 2);
  */
 function duplicate_post_copy_post_meta_info($new_id, $post) {
 	$post_meta_keys = get_post_custom_keys($post->ID);
+	if (empty($post_meta_keys)) return;
 	$meta_blacklist = explode(",",get_option('duplicate_post_blacklist'));
 	if ($meta_blacklist == "") $meta_blacklist = array();
 	$meta_keys = array_diff($post_meta_keys, $meta_blacklist);
@@ -229,9 +244,8 @@ function duplicate_post_copy_post_meta_info($new_id, $post) {
 	foreach ($meta_keys as $meta_key) {
 		$meta_values = get_post_custom_values($meta_key, $post->ID);
 		foreach ($meta_values as $meta_value) {
-			$meta_obj = unserialize($meta_value);
-			if(!$meta_obj) add_post_meta($new_id, $meta_key, $meta_value);
-			else add_post_meta($new_id, $meta_key, $meta_obj);
+			$meta_value = maybe_unserialize($meta_value);
+			add_post_meta($new_id, $meta_key, $meta_value);
 		}
 	}
 }
@@ -241,34 +255,63 @@ add_action('dp_duplicate_post', 'duplicate_post_copy_post_meta_info', 10, 2);
 add_action('dp_duplicate_page', 'duplicate_post_copy_post_meta_info', 10, 2);
 
 /**
+ * Copy the attachments
+ * It simply copies the table entries, actual file won't be duplicated
+ */
+function duplicate_post_copy_children($new_id, $post){
+	$copy_attachments = get_option('duplicate_post_copyattachments');
+	$copy_children = get_option('duplicate_post_copychildren');
+
+	// get children
+	$children = get_posts(array( 'post_type' => 'any', 'numberposts' => -1, 'post_status' => 'any', 'post_parent' => $post->ID ));
+	// clone old attachments
+	foreach($children as $child){
+		if ($copy_attachments == 0 && $child->post_type == 'attachment') continue;
+		if ($copy_children == 0 && $child->post_type != 'attachment') continue;
+		duplicate_post_create_duplicate($child, '', $new_id);
+	}
+}
+// Using our action hooks to copy attachments
+add_action('dp_duplicate_post', 'duplicate_post_copy_children', 10, 2);
+add_action('dp_duplicate_page', 'duplicate_post_copy_children', 10, 2);
+
+
+/**
  * Create a duplicate from a post
  */
-function duplicate_post_create_duplicate($post, $status = '') {
-	global $wpdb;
-	$prefix = get_option('duplicate_post_title_prefix');
-	$suffix = get_option('duplicate_post_title_suffix');
-	if (!empty($prefix)) $prefix.= " ";
-	if (!empty($prefix)) $suffix = " ".$suffix;
-	if (get_option('duplicate_post_copystatus') == 0) $status = 'draft';
+function duplicate_post_create_duplicate($post, $status = '', $parent_id = '') {
+
+	// We don't want to clone revisions
+	if ($post->post_type == 'revision') return;
+
+	if ($post->post_type != 'attachment'){
+		$prefix = get_option('duplicate_post_title_prefix');
+		$suffix = get_option('duplicate_post_title_suffix');
+		if (!empty($prefix)) $prefix.= " ";
+		if (!empty($suffix)) $suffix = " ".$suffix;
+		if (get_option('duplicate_post_copystatus') == 0) $status = 'draft';
+	}
 	$new_post_author = duplicate_post_get_current_user();
 
 	$new_post = array(
 	'menu_order' => $post->menu_order,
 	'comment_status' => $post->comment_status,
 	'ping_status' => $post->ping_status,
-	'pinged' => $post->pinged,
 	'post_author' => $new_post_author->ID,
 	'post_content' => $post->post_content,
-	'post_date' => $new_post_date = (get_option('duplicate_post_copydate') == 1) ? $post->post_date : current_time('mysql'),
-	'post_date_gmt' => get_gmt_from_date($new_post_date),
 	'post_excerpt' => (get_option('duplicate_post_copyexcerpt') == '1') ? $post->post_excerpt : "",
-	'post_parent' => $post->post_parent,
+	'post_mime_type' => $post->post_mime_type,
+	'post_parent' => $new_post_parent = empty($parent_id)? $post->post_parent : $parent_id,
 	'post_password' => $post->post_password,
 	'post_status' => $new_post_status = (empty($status))? $post->post_status: $status,
 	'post_title' => $prefix.$post->post_title.$suffix,
 	'post_type' => $post->post_type,
-	'to_ping' => $post->to_ping 
 	);
+
+	if(get_option('duplicate_post_copydate') == 1){
+		$new_post['post_date'] = $new_post_date =  $post->post_date ;
+		$new_post['post_date_gmt'] = get_gmt_from_date($new_post_date);
+	}
 
 	$new_post_id = wp_insert_post($new_post);
 
@@ -279,13 +322,13 @@ function duplicate_post_create_duplicate($post, $status = '') {
 	do_action( 'dp_duplicate_page', $new_post_id, $post );
 	else
 	do_action( 'dp_duplicate_post', $new_post_id, $post );
-	
+
 	delete_post_meta($new_post_id, '_dp_original');
 	add_post_meta($new_post_id, '_dp_original', $post->ID);
 
-	// If the copy gets immediately published, we have to set a proper slug.
+	// If the copy is published or scheduled, we have to set a proper slug.
 	if ($new_post_status == 'publish' || $new_post_status == 'future'){
-		$post_name = wp_unique_post_slug($post->post_name, $new_post_id, $new_post_status, $post->post_type, $post->post_parent);
+		$post_name = wp_unique_post_slug($post->post_name, $new_post_id, $new_post_status, $post->post_type, $new_post_parent);
 
 		$new_post = array();
 		$new_post['ID'] = $new_post_id;
