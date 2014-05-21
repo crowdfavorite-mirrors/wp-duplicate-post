@@ -3,14 +3,20 @@ Contributors: lopo
 Donate link: http://lopo.it/duplicate-post-plugin/
 Tags: duplicate post, copy, clone
 Requires at least: 3.0
-Tested up to: 3.3.2
-Stable tag: 2.4.1
+Tested up to: 3.8.1
+Stable tag: 2.6
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Clone posts and pages.
 
 == Description ==
 
 This plugin allows to clone a post or page, or edit it as a new draft.
+If you find this useful, [**please consider donating**](http://lopo.it/duplicate-post-plugin/) whatever sum you choose, **even just 10 cents**. It's been downloaded thousands of times: just a few cents from every user would help me develop the plugin and improve support.
+
+
+How it works:
 
 1. In 'Edit Posts'/'Edit Pages', you can click on 'Clone' link below the post/page title: this will immediately create a copy and return to the list.
 
@@ -80,6 +86,9 @@ There is an open ticket in WordPress Trac, as other plugin developers too are in
 
 == Upgrade Notice ==
 
+= 2.6 =
+PHP 5.4 (Strict Standards) compatible + Fixed possible XSS and SQL injections + other bugs 
+
 = 2.4.1 =
 Fixes a couple of bug. Recommended if you have problems with v2.4
 
@@ -114,6 +123,13 @@ Some users have experienced a fatal error when upgrading to v1.1: this may fix i
 New features and customization, WP 3.0 compatibility: you should upgrade if you want to copy Custom Posts with Custom Taxonomies.
 
 == Changelog ==
+
+= 2.6 =
+* PHP 5.4 (Strict Standards) compatible
+* Fixed possible XSS and SQL injections
+* other bugs 
+* Updated and added translations
+* Tested up to WP 3.8.1
 
 = 2.4.1 =
 * Fixed regression about draft permalinks
